@@ -37,7 +37,7 @@ define(function(require) {
 
     // load videos
     var videoKeyChars = ('qwertyuiopasdfghjkl;zxcvbnm'.split('')).concat(['comma','.','forward-slash']);
-    var $videos = $('video');
+    var $videos = $('video, .video');
 
     // SET YOUR IP HERE
     var host = (location.protocol == 'chrome-extension:') ? 'http://192.168.1.115:9000/' : '';
@@ -169,19 +169,17 @@ define(function(require) {
           ).append($video)
         );
         $video[0].load();
-
         // Map the video onto a key.
         mapVideo(key, $video);
-        $videos = $('video');
+
       } else if (file.match(/\.(gif)$/i)) {
-        var $img = $('<img>', {src: file})
+        var $img = $('<img>', {
+          src: file,
+          class: 'video'
+        })
         mapImage(key, $img);
         loadVideo(bank, ++i);
-        $('.loader').css('width',
-          i == keys.length ?
-            0 :
-          (i / keys.length * 100) + '%'
-        );
+
         // Insert video in dom.
         Screens.current.$el.append(
           $('<div>', {
@@ -193,6 +191,7 @@ define(function(require) {
         console.error('bad format', file);
         loadVideo(bank, ++i);
       }
+      $videos = $('video, .video');
     }
     function mapVideo(key, video) {
       var $video = $(video);
@@ -292,6 +291,7 @@ define(function(require) {
       $videos.each(function(i, el){
         stop($(el));
       });
+
     }
 
     function bindSpecialKeys() {
