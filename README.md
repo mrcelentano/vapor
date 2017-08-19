@@ -53,6 +53,10 @@ ESC clears BPM
 
 Option-M toggle mute (on by default).
 
+up and down cycle blend modes
+
+Option+O : circle mask
+
 ##install nginx
 
 This is optional, but it will greatly improve latency and stability.

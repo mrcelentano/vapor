@@ -247,6 +247,7 @@ define(function(require) {
       }
     };
 
+    // switch banks, but only on selected client
     var numbers = '1234567890'.split('');
     numbers.forEach(function(bankNumber) {
       var keyCombo = 'option+' + bankNumber;
@@ -318,6 +319,10 @@ define(function(require) {
         } else {
           $('video').removeAttr('muted');
         }
+      });
+      // make a circle mask.
+      jwerty.key('option+o', function( ){
+        $('.screen').css('clipPath', $('.screen').css('clipPath') === 'none'? 'circle(50VH at center)': 'none');
       });
 
       // These are special keys to transmit.
@@ -443,6 +448,36 @@ define(function(require) {
 
     socket.on('transform', function(data) {
       apply3dTransform(data);
+    });
+
+
+    // cycle blend modes
+    var blendModes = [
+      'normal',
+      'multiply',
+      'overlay',
+      'darken',
+      'lighten',
+      'color-dodge',
+      'color-burn',
+      'hard-light',
+      'soft-light',
+      'difference',
+      'exclusion',
+      'hue',
+      'saturation',
+      'color',
+      'luminosity',
+      'screen'];
+    jwerty.key('↑', function() {
+      var blendMode = blendModes.shift();
+      $('.video-container').css({mixBlendMode: blendMode});
+      blendModes.push(blendMode);
+    });
+    jwerty.key('↓', function() {
+      var blendMode = blendModes.pop();
+      $('.video-container').css({mixBlendMode: blendMode});
+      blendModes.unshift(blendMode);
     });
 
     // hack to load videos on mobile
