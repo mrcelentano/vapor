@@ -42,10 +42,12 @@ define(function(require) {
     // SET YOUR IP HERE
     var host = (location.protocol == 'chrome-extension:') ? 'http://192.168.1.115:9000/' : '';
     var socket = io(host);
+
     $.ajax({
       url: host + 'api/files'
-    }).done(
-      function(files) {
+    }).done(parseFilesJSON);
+
+    function parseFilesJSON(files) {
 
       if (typeof transLoader !== 'undefined') {
         transLoader.files = files;
@@ -82,7 +84,7 @@ define(function(require) {
         });
         loadVideos(Screens.current.bank(0));
       });
-    });
+    }
 
     function loadVideos(bank) {
       if (hide) return;
@@ -114,6 +116,11 @@ define(function(require) {
         manualLoad($('video:not(.played)'));
         return;
       }
+
+      var $videoContainer = $('<div>', {
+          'class': 'video-container off key-' + key
+        }
+      );
 
       if (file.match(/\.(m4v|mov|webm|mp4)$/i)) {
         var $video,
@@ -163,16 +170,13 @@ define(function(require) {
 
         // Insert video in dom.
         Screens.current.$el.append(
-          $('<div>', {
-              'class': 'video-container off'
-            }
-          ).append($video)
+          $videoContainer.append($video)
         );
         $video[0].load();
         // Map the video onto a key.
         mapVideo(key, $video);
 
-      } else if (file.match(/\.(gif)$/i)) {
+      } else if (file.match(/\.(gif|jpg|png)$/i)) {
         var $img = $('<img>', {
           src: file,
           class: 'video'
@@ -182,10 +186,7 @@ define(function(require) {
 
         // Insert video in dom.
         Screens.current.$el.append(
-          $('<div>', {
-              'class': 'video-container off'
-            }
-          ).append($img)
+          $videoContainer.append($img)
         );
       } else {
         console.error('bad format', file);
@@ -225,12 +226,19 @@ define(function(require) {
     // bind keyboard events
     var keysDown = {};
     videoKeyChars.forEach(function(key){
-      jwerty.key(key, function(e){
+      jwerty.key(key, function(e) {
+        // stop event from retriggering when holding down a key.
         if (keysDown[key]) return;
         keysDown[key] = true;
-        $main.trigger('startVideo', [key]);
 
-        socket.emit('keydown', key);
+        // if caps is on and the video is playing, send off signal.
+        if (capsOn && $(`.video-container.key-${key}:not(.off)`).length) {
+          $main.trigger('stopVideo', [key]);
+          socket.emit('keyup', key);
+        } else {
+          $main.trigger('startVideo', [key]);
+          socket.emit('keydown', key);
+        }
       });
       $(document).bind('keyup', jwerty.event(key, function (){
         keysDown[key] = false;
@@ -375,7 +383,6 @@ define(function(require) {
 
 
     // Use websocket to connect to other outs.
-
     socket.on('keydown', function (key) {
       $('.screen').trigger('startVideo', [key]);
       specialKeys[key] && specialKeys[key]();

@@ -4,10 +4,11 @@ define(function(require) {
   var Autopilot = function(config){
     // config must be passed play and stop;
 
-    jwerty.key('`', function() {
+    jwerty.key('tab', function(e) {
       pilot.tap();
+      e.preventDefault();
     });
-    jwerty.key('esc', function() {
+    jwerty.key('`', function() {
       pilot.clearBmp();
     });
 
