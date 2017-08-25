@@ -206,13 +206,13 @@ define(function(require) {
       for (var i in Screens.items) {
         Screens.items[i].videoKeyMap[key] && play(Screens.items[i].videoKeyMap[key]);
       }
-      keymap.$el.find(`[data-value=${key}]`).addClass('down');
+      keymap.$el.find(`[data-value="${key}"]`).addClass('down');
     });
     $main.on('stopVideo', function(e, key) {
       for (var i in Screens.items) {
         Screens.items[i].videoKeyMap[key] && stop(Screens.items[i].videoKeyMap[key]);
       }
-      keymap.$el.find(`[data-value=${key}]`).removeClass('down');
+      keymap.$el.find(`[data-value="${key}"]`).removeClass('down');
     });
     $main.on('changeBank', function(e, key){
       loadVideos(Screens.current.bank(key));
@@ -223,7 +223,7 @@ define(function(require) {
     videoKeyChars.forEach(function(key){
       jwerty.key(key, function(e) {
         // stop event from retriggering when holding down a key.
-        if (keysDown[key]) return;
+        if (keysDown[key] || ! key) return;
         keysDown[key] = true;
 
         // if caps is on and the video is playing, send off signal.
@@ -295,7 +295,7 @@ define(function(require) {
       $videos.each(function(i, el){
         stop($(el));
       });
-
+      keymap.$el.find('.keymap-key').removeClass('down');
     }
 
     function bindSpecialKeys() {

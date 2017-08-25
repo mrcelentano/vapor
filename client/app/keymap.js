@@ -9,7 +9,10 @@ define(function(require){
   });
 
   jwerty.key('option+k', function(){
-    $keymap.toggleClass('hidden');
+    $keymap.toggleClass('hidden')
+      .find('.keymap-key')
+        .removeClass('down');
+    keymap.hidden = $keymap.hasClass('hidden');
   });
 
   var keymap = {
@@ -54,6 +57,14 @@ define(function(require){
         .css('background-image', 'url("/assets/images/thumbs/' +
           encodeURI(_.last(url.split('/')))
           + '/tn.png")');
+    },
+    keydown: function(key) {
+      if (!keymap.hidden )
+        $keymap.find(`[data-value="${key}"]`).addClass('down');
+    },
+    keyup: function(key) {
+      if (! keymap.hidden)
+        $keymap.find(`[data-value="${key}"]`).removeClass('down');
     }
   };
 
