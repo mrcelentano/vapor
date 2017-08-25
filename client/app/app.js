@@ -13,8 +13,8 @@ define(function(require) {
   var keymap = require('./keymap');
   var Autopilot = require('./autopilot/Autopilot');
   var startTimer;
-  var loading = false;
   var sliders = require('./sliders');
+  var loader = require('./loader');
 
   var networkStates = ['NETWORK_EMPTY', 'NETWORK_IDLE', 'NETWORK_LOADING', 'NETWORK_NO_SOURCE'];
 
@@ -88,8 +88,9 @@ define(function(require) {
 
     function loadVideos(bank) {
       if (hide) return;
-      startTimer = new Date();
 
+      startTimer = new Date();
+      loader.reset(bank);
       keymap.clear();
       keymap.renderBanks();
       $('video', Screens.current.$el).each(function(){
@@ -111,8 +112,7 @@ define(function(require) {
 
       if ( ! key || ! file) {
         console.log('done loading', startTimer && 'in ' + (new Date() - startTimer)+'ms' );
-        loading = false;
-        $('.loader').width(0);
+        loader.finish();
         manualLoad($('video:not(.played)'));
         return;
       }
@@ -147,9 +147,6 @@ define(function(require) {
         $video.on('stalled', function(e) {
           var $video = $(e.currentTarget);
           console.warn('video stalled', networkStates[$video[0].networkState]);
-          if (loading) {
-            blackout();
-          }
         });
 
         // needed to detect autoplay.
@@ -161,11 +158,7 @@ define(function(require) {
         $video.one('canplaythrough', function(e) {
           $(e.currentTarget)[0].pause();
           loadVideo(bank, ++i);
-          $('.loader').css('width',
-            i == keys.length ?
-              0 :
-            (i / keys.length * 100) + '%'
-          );
+          loader.update(1);
         });
 
         // Insert video in dom.
@@ -180,7 +173,9 @@ define(function(require) {
         var $img = $('<img>', {
           src: file,
           class: 'video'
-        })
+        }).load(function() {
+          loader.update(1);
+        });
         mapImage(key, $img);
         loadVideo(bank, ++i);
 
@@ -220,8 +215,6 @@ define(function(require) {
     $main.on('changeBank', function(e, key){
       loadVideos(Screens.current.bank(key));
     });
-
-
 
     // bind keyboard events
     var keysDown = {};

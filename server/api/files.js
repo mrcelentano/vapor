@@ -7,35 +7,44 @@ var walk    = require('walk');
 var path = require('path');
 var ffmpeg = require('fluent-ffmpeg');
 var fs = require('fs');
+var AWS = require('aws-sdk');
 
-// get IP address
-var os=require('os');
-var ifaces=os.networkInterfaces();
-var ip;
-Object.keys(ifaces).forEach(function(dev) {
-  var alias=0;
-  ifaces[dev].forEach(function(details) {
-    if (details.family=='IPv4') {
-      ip = details.address;
-      ++alias;
-    }
+router.get('/', walkLocalFiles); //walkLocalFiles
+
+module.exports = router;
+
+var staticServer;
+
+var validFilePattern = /\.(m4v|mov|webm|mp4|gif|jpg|png)$/i;
+
+function listS3Files(req, res) {
+  var s3 = new AWS.S3();
+  var params = {
+    Bucket: process.env.BUCKET || 'vapor-vjapp'
+  };
+  var staticServer = process.env.FILE_ROOT || 'http://dk1ug69h7ixee.cloudfront.net/';
+  s3.listObjects(params, function(err, data) {
+    if (err) console.log(err, err.stack); // an error occurred
+    else     res.json(200, data.Contents.map(function(object) {
+      return staticServer + object.Key;
+    }).filter(function(fileUrl) {
+      return !! fileUrl.match(validFilePattern);
+    }));
   });
-});
+}
 
-router.get('/', function(req, res) {
+function walkLocalFiles(req, res) {
 
   var files   = [];
 
-// Walker options
+  // Walker options
   var walker  = walk.walk('client/assets/video', { followLinks: false });
-
   walker.on('file', function(root, stat, next) {
 
-    var staticServer = '';
-    staticServer = 'http://' + ip + ':8080/';
+    staticServer = 'http://' + getIpAddress() + ':8080/';
 
     // Add this file to the list of files
-    if (stat.name[0] !== '.') {
+    if (stat.name.match(validFilePattern)) {
       files.push(root.replace(/^client\//, staticServer) + '/' + stat.name);
 
       // generate a thumbnail.
@@ -61,9 +70,19 @@ router.get('/', function(req, res) {
   walker.on('end', function() {
     res.json(200, files);
   });
-});
+}
 
-
-module.exports = router;
-
-// TODO: hash all the files and store their thumbnail.
+function getIpAddress() {
+  // get IP address
+  var os=require('os');
+  var ifaces=os.networkInterfaces();
+  var ip;
+  Object.keys(ifaces).forEach(function(dev) {
+    ifaces[dev].forEach(function(details) {
+      if (details.family=='IPv4') {
+        ip = details.address;
+      }
+    });
+  });
+  return ip;
+}
