@@ -206,11 +206,13 @@ define(function(require) {
       for (var i in Screens.items) {
         Screens.items[i].videoKeyMap[key] && play(Screens.items[i].videoKeyMap[key]);
       }
+      keymap.$el.find(`[data-value=${key}]`).addClass('down');
     });
     $main.on('stopVideo', function(e, key) {
       for (var i in Screens.items) {
         Screens.items[i].videoKeyMap[key] && stop(Screens.items[i].videoKeyMap[key]);
       }
+      keymap.$el.find(`[data-value=${key}]`).removeClass('down');
     });
     $main.on('changeBank', function(e, key){
       loadVideos(Screens.current.bank(key));

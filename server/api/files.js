@@ -8,6 +8,7 @@ var path = require('path');
 var ffmpeg = require('fluent-ffmpeg');
 var fs = require('fs');
 var AWS = require('aws-sdk');
+const sharp = require('sharp');
 
 router.get('/', walkLocalFiles); //walkLocalFiles
 
@@ -42,25 +43,40 @@ function walkLocalFiles(req, res) {
   walker.on('file', function(root, stat, next) {
 
     staticServer = 'http://' + getIpAddress() + ':8080/';
-
     // Add this file to the list of files
     if (stat.name.match(validFilePattern)) {
       files.push(root.replace(/^client\//, staticServer) + '/' + stat.name);
 
+      let thubsDir = 'client/assets/images/thumbs/';
       // generate a thumbnail.
-      fs.exists('client/assets/images/thumbs/' + stat.name + '/tn.png', function(exists){
-        if (! exists && stat.name.match(/\.(mpg|mp4|m4v)$/)) {
-          console.log('generating thumbnail: ', stat.name);
-          var proc = new ffmpeg(path.join(root, stat.name))
-            .screenshots({
-              count: 1,
-              size: '100x?',
-              timemarks: [ '33%' ]
-            }, 'client/assets/images/thumbs/' + stat.name, function(err) {
-              if (err) {
-                console.error('error generating thumbnail', err);
-              }
-            });
+      fs.exists(thubsDir + stat.name + '/tn.png', function(exists){
+        if (! exists) {
+          if (stat.name.match(/\.(m4v|mov|webm|mp4)$/)) {
+            console.log('generating thumbnail: ', stat.name);
+
+            var proc = new ffmpeg(path.join(root, stat.name))
+              .screenshots({
+                count: 1,
+                size: '100x?',
+                timemarks: [ '33%' ]
+              }, thubsDir + stat.name, function(err) {
+                if (err) {
+                  console.error('error generating thumbnail', err);
+                }
+              });
+          } else if (stat.name.match(/.(gif|jpg|png)$/)) {
+            fs.mkdirSync(`${thubsDir}${stat.name}`);
+            sharp(path.join(root, stat.name)) //
+              .resize(100)
+              .toFile(`${thubsDir}${stat.name}/tn.png`, (err, info) => {
+                if (err) {
+                  console.error('failed to generate thum from image', err);
+                } else {
+                  console.log('thumbnail generated', info);
+                }
+              });
+          }
+          
         }
       });
     }
