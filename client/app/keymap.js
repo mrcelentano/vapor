@@ -60,11 +60,11 @@ define(function(require){
     },
     keydown: function(key) {
       if (!keymap.hidden )
-        $keymap.find(`[data-value="${key}"]`).addClass('down');
+        $keymap.find('[data-value="' + key + '"]').addClass('down');
     },
     keyup: function(key) {
       if (! keymap.hidden)
-        $keymap.find(`[data-value="${key}"]`).removeClass('down');
+        $keymap.find('[data-value="' + key + '"]').removeClass('down');
     }
   };
 

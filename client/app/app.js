@@ -206,13 +206,13 @@ define(function(require) {
       for (var i in Screens.items) {
         Screens.items[i].videoKeyMap[key] && play(Screens.items[i].videoKeyMap[key]);
       }
-      keymap.$el.find(`[data-value="${key}"]`).addClass('down');
+      keymap.keydown(key);
     });
     $main.on('stopVideo', function(e, key) {
       for (var i in Screens.items) {
         Screens.items[i].videoKeyMap[key] && stop(Screens.items[i].videoKeyMap[key]);
       }
-      keymap.$el.find(`[data-value="${key}"]`).removeClass('down');
+      keymap.keyup(key);
     });
     $main.on('changeBank', function(e, key){
       loadVideos(Screens.current.bank(key));
@@ -225,9 +225,9 @@ define(function(require) {
         // stop event from retriggering when holding down a key.
         if (keysDown[key] || ! key) return;
         keysDown[key] = true;
-
+        
         // if caps is on and the video is playing, send off signal.
-        if (capsOn && $(`.video-container.key-${key}:not(.off)`).length) {
+        if (capsOn && $('.video-container.key-'+key+':not(.off)').length) {
           $main.trigger('stopVideo', [key]);
           socket.emit('keyup', key);
         } else {

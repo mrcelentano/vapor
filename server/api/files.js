@@ -10,27 +10,46 @@ var fs = require('fs');
 var AWS = require('aws-sdk');
 const sharp = require('sharp');
 
-router.get('/', walkLocalFiles); //walkLocalFiles
+if (process.env.HOSTED) {
+  router.get('/', listS3Files);
+} else {
+  router.get('/', walkLocalFiles);  
+}
 
 module.exports = router;
 
 var staticServer;
 
 var validFilePattern = /\.(m4v|mov|webm|mp4|gif|jpg|png)$/i;
+let thubsDir = 'client/assets/images/thumbs/';
 
 function listS3Files(req, res) {
   var s3 = new AWS.S3();
   var params = {
-    Bucket: process.env.BUCKET || 'vapor-vjapp'
+    Bucket: process.env.BUCKET || 'vapor-vjapp',
+    Prefix: 'video/'
   };
   var staticServer = process.env.FILE_ROOT || 'http://dk1ug69h7ixee.cloudfront.net/';
   s3.listObjects(params, function(err, data) {
-    if (err) console.log(err, err.stack); // an error occurred
-    else     res.json(200, data.Contents.map(function(object) {
-      return staticServer + object.Key;
-    }).filter(function(fileUrl) {
-      return !! fileUrl.match(validFilePattern);
-    }));
+    if (err) {
+      console.error('error getting video list from s3', err);
+    } else {
+      res.json(200, data.Contents.map(function(object) {
+        s3.listObjects({
+          Bucket: params.Bucket,
+          Prefix: 'images/thumbs/'
+        }, function(err, data) {
+          if (err) {
+            console.error('error getting thumbnail list from s3', err);
+          } else {
+            //generateThumbnail();
+          }
+        })
+        return staticServer + object.Key;
+      }).filter(function(fileUrl) {
+        return !! fileUrl.match(validFilePattern);
+      }));
+    }
   });
 }
 
@@ -46,37 +65,13 @@ function walkLocalFiles(req, res) {
     // Add this file to the list of files
     if (stat.name.match(validFilePattern)) {
       files.push(root.replace(/^client\//, staticServer) + '/' + stat.name);
-
-      let thubsDir = 'client/assets/images/thumbs/';
       // generate a thumbnail.
       fs.exists(thubsDir + stat.name + '/tn.png', function(exists){
         if (! exists) {
-          if (stat.name.match(/\.(m4v|mov|webm|mp4)$/)) {
-            console.log('generating thumbnail: ', stat.name);
-
-            var proc = new ffmpeg(path.join(root, stat.name))
-              .screenshots({
-                count: 1,
-                size: '100x?',
-                timemarks: [ '33%' ]
-              }, thubsDir + stat.name, function(err) {
-                if (err) {
-                  console.error('error generating thumbnail', err);
-                }
-              });
-          } else if (stat.name.match(/.(gif|jpg|png)$/)) {
-            fs.mkdirSync(`${thubsDir}${stat.name}`);
-            sharp(path.join(root, stat.name)) //
-              .resize(100)
-              .toFile(`${thubsDir}${stat.name}/tn.png`, (err, info) => {
-                if (err) {
-                  console.error('failed to generate thum from image', err);
-                } else {
-                  console.log('thumbnail generated', info);
-                }
-              });
-          }
-          
+          generateThumbnail({
+            name: stat.name, 
+            root: root
+          });
         }
       });
     }
@@ -86,6 +81,33 @@ function walkLocalFiles(req, res) {
   walker.on('end', function() {
     res.json(200, files);
   });
+}
+
+function generateThumbnail({name, root}) {
+  if (name.match(/\.(m4v|mov|webm|mp4)$/)) {
+    console.log('generating thumbnail: ', name);
+    var proc = new ffmpeg(path.join(root, name))
+      .screenshots({
+        count: 1,
+        size: '100x?',
+        timemarks: [ '33%' ]
+      }, thubsDir + name, function(err) {
+        if (err) {
+          console.error('error generating thumbnail', err);
+        }
+      });
+  } else if (name.match(/.(gif|jpg|png)$/)) {
+    fs.mkdirSync(`${thubsDir}${name}`);
+    sharp(path.join(root, name)) //
+      .resize(100)
+      .toFile(`${thubsDir}${name}/tn.png`, (err, info) => {
+        if (err) {
+          console.error('failed to generate thum from image', err);
+        } else {
+          console.log('thumbnail generated', info);
+        }
+      });
+  }
 }
 
 function getIpAddress() {
