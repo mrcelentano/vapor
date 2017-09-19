@@ -46,6 +46,8 @@ function listS3Files(req, res) {
         return staticServer + object.Key;
       }));
 
+	return;
+
       console.log('generating thumbs');
 
       // check thumbnails, generate missing ones.
