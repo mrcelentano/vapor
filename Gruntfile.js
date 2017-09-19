@@ -17,7 +17,8 @@ module.exports = function (grunt) {
     cdnify: 'grunt-google-cdn',
     protractor: 'grunt-protractor-runner',
     injector: 'grunt-asset-injector',
-    buildcontrol: 'grunt-build-control'
+    buildcontrol: 'grunt-build-control',
+    requirejs: 'grunt-contrib-requirejs'
   });
 
   // Time how long tasks take. Can help when optimizing build times
@@ -78,7 +79,7 @@ module.exports = function (grunt) {
           '<%= yeoman.client %>/{app,components}/**/*.spec.js',
           '<%= yeoman.client %>/{app,components}/**/*.mock.js'
         ],
-        tasks: ['newer:jshint:all', 'karma']
+        //tasks: ['newer:jshint:all', 'karma']
       },
       injectLess: {
         files: [
@@ -255,7 +256,7 @@ module.exports = function (grunt) {
     usemin: {
       html: ['<%= yeoman.dist %>/public/{,*/}*.html'],
       css: ['<%= yeoman.dist %>/public/{,*/}*.css'],
-      js: ['<%= yeoman.dist %>/public/{,*/}*.js'],
+      // js: ['<%= yeoman.dist %>/public/{,*/}*.js'],
       options: {
         assetsDirs: [
           '<%= yeoman.dist %>/public',
@@ -420,17 +421,17 @@ module.exports = function (grunt) {
       },
       dist: [
         'less',
-        'imagemin',
+        //'imagemin',
         'svgmin'
       ]
     },
 
     // Test settings
     karma: {
-      unit: {
-        configFile: 'karma.conf.js',
-        singleRun: true
-      }
+      // unit: {
+      //   configFile: 'karma.conf.js',
+      //   singleRun: true
+      // }
     },
 
     mochaTest: {
@@ -541,6 +542,20 @@ module.exports = function (grunt) {
         }
       }
     },
+
+    requirejs: {
+      compile: {
+        options: {
+          baseUrl: 'client/app',
+          mainConfigFile: 'client/app/app.js',
+          dir: '.tmp/',
+          error: function(done, err) {
+            grunt.log.warn(err);
+            done();
+          }
+        }
+      }
+    }
   });
 
   // Used for delaying livereload until after server has restarted
@@ -614,7 +629,7 @@ module.exports = function (grunt) {
         'concurrent:test',
         'injector',
         'autoprefixer',
-        'karma'
+        //'karma'
       ]);
     }
 
@@ -644,22 +659,23 @@ module.exports = function (grunt) {
     'injector:less', 
     'concurrent:dist',
     'injector',
+    'requirejs',
     'wiredep',
-    'useminPrepare',
+    //'useminPrepare',
     'autoprefixer',
     'ngtemplates',
     'concat',
     'ngAnnotate',
     'copy:dist',
-    'cdnify',
-    'cssmin',
-    'uglify',
+    //'cdnify',
+    //'cssmin',
+    //'uglify',
     'rev',
-    'usemin'
+    //'usemin'
   ]);
 
   grunt.registerTask('default', [
-    'newer:jshint',
+    //'newer:jshint',
     'test',
     'build'
   ]);

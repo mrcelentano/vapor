@@ -8,7 +8,9 @@ var path = require('path');
 var ffmpeg = require('fluent-ffmpeg');
 var fs = require('fs');
 var AWS = require('aws-sdk');
-const sharp = require('sharp');
+if ( ! process.env.HOSTED ) {
+  const sharp = require('sharp');  
+}
 
 if (process.env.HOSTED) {
   router.get('/', listS3Files);
@@ -16,39 +18,56 @@ if (process.env.HOSTED) {
   router.get('/', walkLocalFiles);  
 }
 
+var bucketName = process.env.BUCKET || 'vapor-vjapp';
 module.exports = router;
 
 var staticServer;
 
 var validFilePattern = /\.(m4v|mov|webm|mp4|gif|jpg|png)$/i;
-let thubsDir = 'client/assets/images/thumbs/';
+let thubsDir =  /* process.env.HOSTED ? 'images/thumbs/' : */ 'client/assets/images/thumbs/';
 
 function listS3Files(req, res) {
   var s3 = new AWS.S3();
   var params = {
-    Bucket: process.env.BUCKET || 'vapor-vjapp',
+    Bucket: bucketName,
     Prefix: 'video/'
   };
   var staticServer = process.env.FILE_ROOT || 'http://dk1ug69h7ixee.cloudfront.net/';
-  s3.listObjects(params, function(err, data) {
+  s3.listObjects(params, function(err, videoFilesData) {
     if (err) {
       console.error('error getting video list from s3', err);
     } else {
-      res.json(200, data.Contents.map(function(object) {
-        s3.listObjects({
-          Bucket: params.Bucket,
-          Prefix: 'images/thumbs/'
-        }, function(err, data) {
-          if (err) {
-            console.error('error getting thumbnail list from s3', err);
-          } else {
-            //generateThumbnail();
-          }
-        })
+
+      let videoFiles = videoFilesData.Contents.filter(function(object) {
+        return !! object.Key.match(object.Key);
+      });
+
+      res.json(200, videoFiles.map(function(object) {
         return staticServer + object.Key;
-      }).filter(function(fileUrl) {
-        return !! fileUrl.match(validFilePattern);
       }));
+
+      console.log('generating thumbs');
+
+      // check thumbnails, generate missing ones.
+      s3.listObjects({
+        Bucket: params.Bucket,
+        Prefix: 'images/thumbs/'
+      }, function(err, thumbsData) {
+        if (err) {
+          console.error('error getting thumbnail list from s3', err);
+        } else {
+          console.log('thumbs', videoFilesData, thumbsData);
+          _.difference(videoFiles.map(function(fileObject) {
+              return fileObject.Key.replace(videoFilesData.Prefix, thumbsData.Prefix)
+            }), thumbsData.Contents.map(function(fileObject) {
+              return fileObject.Key;
+          })).forEach(function (missingThumb) {
+
+            generateThumbnail({name: missingThumb});
+          });
+        }
+      })
+
     }
   });
 }
@@ -87,6 +106,13 @@ function generateThumbnail({name, root}) {
   if (name.match(/\.(m4v|mov|webm|mp4)$/)) {
     console.log('generating thumbnail: ', name);
     var proc = new ffmpeg(path.join(root, name))
+      .on('end', function() {
+        //console.log('Screenshots taken');
+        if (process.env.HOSTED) {
+          // upload file to s3 and delete.
+          fs.unlink(thubsDir + name);
+        }
+      })
       .screenshots({
         count: 1,
         size: '100x?',
@@ -97,16 +123,30 @@ function generateThumbnail({name, root}) {
         }
       });
   } else if (name.match(/.(gif|jpg|png)$/)) {
-    fs.mkdirSync(`${thubsDir}${name}`);
-    sharp(path.join(root, name)) //
-      .resize(100)
-      .toFile(`${thubsDir}${name}/tn.png`, (err, info) => {
-        if (err) {
-          console.error('failed to generate thum from image', err);
-        } else {
-          console.log('thumbnail generated', info);
-        }
+    
+    if (0) { // (process.env.HOSTED) {
+      var s3Bucket = new AWS.S3({params: {
+       Bucket: bucketName,
+      }});
+      var thumb = sharp(path.join(name))
+      .resize(100);
+      s3Bucket.upload({
+        Key: '/images/thumbs' + name,
+        Body: thumb
       });
+    } else {
+      let _name = name.replace(/\//g, '_');
+      fs.mkdirSync(`${thubsDir}${_name}`);
+      var thumb = sharp(path.join(root, name))
+        .resize(100)
+        .toFile(`${thubsDir}${_name}/tn.png`, (err, info) => {
+          if (err) {
+            console.error('failed to generate thum from image', err);
+          } else {
+            console.log('thumbnail generated', info);
+          }
+      });
+    }
   }
 }
 
