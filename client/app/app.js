@@ -30,7 +30,8 @@ define(function(require) {
     var pilot = Autopilot({
       play: play,
       stop: stop,
-      screens: Screens.items
+      screens: Screens.items,
+      changeBank
     });
 
     var mute = true;

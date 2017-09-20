@@ -84,6 +84,11 @@ define(function(require) {
         var newKey = keys[_.random(0,keys.length-1)];
         pilot.screens.forEach(function(screen){
 
+          if (played.length >= Object.keys(config.screens[0].bank()).length * 2) {
+            config.changeBank(parseInt(Math.random() * config.screens[0].banks.length));
+            played = [];
+          }
+
           if (playing.length >= maxLayers) {
             var videoToStop = playing[_.random(playing.length)];
             screen.$el.trigger('stopVideo', [videoToStop]);
