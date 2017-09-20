@@ -57,7 +57,7 @@ define(function(require){
       // check if the file is local or on the server
       var thumbUrl = (url.indexOf('/assets/video/') !== -1) ?
         '/assets/images/thumbs/' + encodeURI(_.last(url.split('/'))) + '/tn.png' :
-        url.replace(/\/video\//, '/thumbnails/video/').replace(/\.\w+$/, '.gif');
+        url.replace(/\/video\//, '/thumbnails/video/').replace(/\.\w+$/, '.jpg');
 
       $('[data-value="' + _key + '"]', keymap.$el)
         .css('background-image', 'url("' + thumbUrl + '")');
