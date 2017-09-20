@@ -66,11 +66,13 @@ define(function(require) {
       // list in file browser
       $('.files .list').html(function(){
         return files.map(function(file){
-          var _filename = file.replace(/^.*assets\/video\//, '');
+          //var _filename = file.replace(/assets\/video\/(.*\/)*([^\/]+)/, 'assets/images/$1/tn.png');
+          var _filename = file.replace(/\/video\//, '/thumbnails/video/');
+
           return $('<div>', {
             text: _filename,
             'class': 'file',
-            style: 'background-image: url("assets/images/thumbs/' + encodeURI(_.last(_filename.split('/'))) + '/tn.png")'
+            style: 'background-image: url("' + _filename + '")'
           });
         });
       });

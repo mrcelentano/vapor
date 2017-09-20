@@ -53,10 +53,14 @@ define(function(require){
           _key = '/';
           break;
       };
+
+      // check if the file is local or on the server
+      var thumbUrl = (url.indexOf('/assets/video/') !== -1) ?
+        '/assets/images/thumbs/' + encodeURI(_.last(url.split('/'))) + '/tn.png' :
+        url.replace(/\/video\//, '/thumbnails/video/').replace(/\.\w+$/, '.gif');
+
       $('[data-value="' + _key + '"]', keymap.$el)
-        .css('background-image', 'url("/assets/images/thumbs/' +
-          encodeURI(_.last(url.split('/')))
-          + '/tn.png")');
+        .css('background-image', 'url("' + thumbUrl + '")');
     },
     keydown: function(key) {
       if (!keymap.hidden )

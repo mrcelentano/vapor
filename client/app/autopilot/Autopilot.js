@@ -8,16 +8,13 @@ define(function(require) {
       pilot.tap();
       e.preventDefault();
     });
+    $('#main').on('touchstart', function(e) {
+      pilot.tap();
+    });
+
     jwerty.key('`', function() {
       pilot.clearBmp();
     });
-
-//    $('#main').on('click', function(){
-//      pilot.tap();
-//    });
-//    $('.bpm').click(function(){
-//      pilot.clearBmp();
-//    });
 
     jwerty.key('option+`', function(){
       $('.autopilot').toggleClass('hidden');

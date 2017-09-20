@@ -1,6 +1,6 @@
-#vapor
+# vapor
 
-##installation:
+## installation:
 
 `npm install`
 
@@ -10,7 +10,7 @@
 
 put clips in client/assets/video
 
-##run
+## run
 
 run `nginx` (if configured)
 
@@ -27,11 +27,11 @@ number keys preview banks. (when viewing the keyboard layout.
 
 option-[number] selects bank.
 
-Caps-lock to sustain all videos.
+Caps-lock to sustain all videos, use toggle mode. Videos keep playing until you hit the same key agian
 
-Spacebar to blackout.
+Spacebar to blackout. Stops all videos
 
-Command-Shift-F to enter full screen.
+Command-Control-F to enter full screen.
 
 Option-S brings up fade and Video mapping controls.
 
@@ -43,9 +43,9 @@ Option-F for File browser.
 
 Ctrl-S shows screens.
 
-Ctrl-{number} selects or creates screen.
+Ctrl-{number} selects or creates screen. Each screen can be repositioned and 3D mapped to a different location on a client using the sliders. They can also have different back loaded.
 
-Tapping ~ sets autopilot BPM
+Tapping Tab sets autopilot BPM
 
 Option-~ hide/show BPM
 
@@ -53,13 +53,13 @@ ESC clears BPM
 
 Option-M toggle mute (on by default).
 
-up and down cycle blend modes
+up and down : cycle blend modes
 
 Option+O : circle mask
 
 ##install nginx
 
-This is optional, but it will greatly improve latency and stability.
+This is optional, but it will improve latency and stability.
 
 `brew tap homebrew/nginx`
 
