@@ -34,7 +34,7 @@ define(function(require) {
     var intervalId;
     var played = [];
     var playing = [];
-
+    var intervalRate;
 
     var pilot = {
       screens: config.screens,
@@ -52,8 +52,9 @@ define(function(require) {
           return;
         }
 
-        if ((interval) > 15000) {
+        if (intervalRate && (interval) > intervalRate * 2) {
           pilot.clearBmp();
+          return;
         }
         tapIntervals.push(interval);
         if (tapIntervals.length) {
@@ -61,7 +62,7 @@ define(function(require) {
           tapIntervals.forEach(function(interval) {
             sum += interval;
           });
-          var intervalRate = sum/tapIntervals.length;
+          intervalRate = sum/tapIntervals.length;
 
           $('.bpm').text(Math.round(60000/intervalRate));
           clearInterval(intervalId);
@@ -72,6 +73,7 @@ define(function(require) {
       clearBmp: function() {
         lastTapTime = undefined;
         tapIntervals = [];
+        intervalRate = null;
         $('.bpm').text('');
         clearInterval(intervalId);
         pilot.screens.forEach(function(screen) {
