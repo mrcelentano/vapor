@@ -19,26 +19,32 @@ function onDisconnect(socket, io) {
 function onConnect(socket, io) {
   clients[socket.id] = true;
   console.log('socket', socket.id);
-  io.sockets.emit('clients', JSON.stringify(clients));
+  io.sockets.in(channel).emit('clients', JSON.stringify(clients));
   // When the client emits 'info', this listens and executes
   socket.on('info', function (data) {
     console.info('[%s] %s',  socket.address, JSON.stringify(data, null, 2));
   });
 
-  //
+  var channel;
 
+  //
+  socket.on('channel', function(_channel) {
+    socket.join(_channel);
+    channel = _channel;
+    console.log('channel', channel);
+  });
   socket.on('keydown', function(data){
-    socket.broadcast.emit('keydown', data);
+    socket.broadcast.in(channel).emit('keydown', data);
   });
   socket.on('keyup', function(data){
-    socket.broadcast.emit('keyup', data);
+    socket.broadcast.in(channel).emit('keyup', data);
   });
   socket.on('fadeDuration', function (val) {
-    socket.broadcast.emit('fadeDuration', val);
+    socket.broadcast.in(channel).emit('fadeDuration', val);
   });
   socket.on('transform', function(str){
     var data = JSON.parse(str);
-    io.sockets.connected[data.clientID] && io.sockets.connected[data.clientID].emit('transform', data);
+    io.sockets.connected[data.clientID] && io.sockets.connected[data.clientID].in(channel).emit('transform', data);
   });
 
 }

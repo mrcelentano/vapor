@@ -41,8 +41,10 @@ define(function(require) {
     var $videos = $('video, .video');
 
     // SET YOUR IP HERE
-    var host = (location.protocol == 'chrome-extension:') ? 'http://192.168.1.115:9000/' : '';
+    var host = (location.protocol == 'chrome-extension:') ? 'http://192.168.1.115:9000' : '';
     var socket = io(host);
+    let channel = (new URL(location.href)).searchParams.get('channel') || 'none';
+    socket.on('connect', () => socket.emit('channel', channel));
 
     $.ajax({
       url: host + 'api/files'
