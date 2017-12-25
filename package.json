@@ -94,5 +94,8 @@
     "test": "grunt test",
     "update-webdriver": "node node_modules/grunt-protractor-runner/node_modules/protractor/bin/webdriver-manager update"
   },
-  "private": true
+  "private": true,
+  "repository": "https://github.com/robhybrid/vapor.git",
+  "author": "Robert Williams <rob@robhybrid.com>",
+  "license": "MIT"
 }
