@@ -15,6 +15,7 @@ define(function(require) {
   var startTimer;
   var sliders = require('./sliders');
   var loader = require('./loader');
+  var videoKeyChars = require('./videoKeyChars');
 
   var networkStates = ['NETWORK_EMPTY', 'NETWORK_IDLE', 'NETWORK_LOADING', 'NETWORK_NO_SOURCE'];
 
@@ -27,17 +28,9 @@ define(function(require) {
 
   $(function() {
 
-    var pilot = Autopilot({
-      play: play,
-      stop: stop,
-      screens: Screens.items,
-      changeBank
-    });
-
     var mute = true;
 
     // load videos
-    var videoKeyChars = ('qwertyuiopasdfghjkl;zxcvbnm'.split('')).concat(['comma','.','forward-slash']);
     var $videos = $('video, .video');
 
     // SET YOUR IP HERE
@@ -45,6 +38,14 @@ define(function(require) {
     var socket = io(host);
     let channel = (new URL(location.href)).searchParams.get('channel') || 'none';
     socket.on('connect', () => socket.emit('channel', channel));
+
+    var pilot = Autopilot({
+      play: play,
+      stop: stop,
+      screens: Screens.items,
+      changeBank,
+      socket
+    });
 
     $.ajax({
       url: host + 'api/files'

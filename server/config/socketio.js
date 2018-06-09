@@ -17,15 +17,17 @@ function onDisconnect(socket, io) {
 
 // When the user connects.. perform this
 function onConnect(socket, io) {
+  var channel = 'none';
+
   clients[socket.id] = true;
   console.log('socket', socket.id);
-  io.sockets.in(channel).emit('clients', JSON.stringify(clients));
+  setTimeout(function() {
+    io.sockets.in(channel).emit('clients', JSON.stringify(clients));
+  }, 1000);
   // When the client emits 'info', this listens and executes
   socket.on('info', function (data) {
     console.info('[%s] %s',  socket.address, JSON.stringify(data, null, 2));
   });
-
-  var channel;
 
   //
   socket.on('channel', function(_channel) {

@@ -1,4 +1,7 @@
 define(function(require) {
+
+  var videoKeyChars = require('../videoKeyChars');
+
   var jwerty = require('jwerty');
 
   var Autopilot = function(config){
@@ -22,11 +25,11 @@ define(function(require) {
 
     var maxLayers = 2;
     // set the max number of layers to play at once
-    var numbers = '1234567890'.split('').forEach(function(n) {
-      jwerty.key(n, function() {
-        maxLayers = n;
-      });
-    });
+    //var numbers = '1234567890'.split('').forEach(function(n) {
+    //  jwerty.key(n, function() {
+    //    maxLayers = n;
+    //  });
+    //});
 
 
     var lastTapTime,
@@ -35,6 +38,7 @@ define(function(require) {
     var played = [];
     var playing = [];
     var intervalRate;
+    var lastKey;
 
     var pilot = {
       screens: config.screens,
@@ -82,8 +86,15 @@ define(function(require) {
       },
       playNext: function() {
         // TODO: make a little pulsing indicator.
+        if (lastKey) {
+          config.socket.emit('keyup', lastKey);
+        }
         var keys = Object.keys(pilot.screens[0].videoKeyMap);
         var newKey = keys[_.random(0,keys.length-1)];
+        
+        config.socket.emit('keydown', newKey);
+        lastKey = newKey;
+
         pilot.screens.forEach(function(screen){
 
           if (played.length >= Object.keys(config.screens[0].bank()).length * 2) {
